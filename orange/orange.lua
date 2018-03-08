@@ -9,6 +9,7 @@ local utils = require("orange.utils.utils")
 local config_loader = require("orange.utils.config_loader")
 local dao = require("orange.store.dao")
 local dns_client = require("resty.dns.client")
+ipip = require "orange.plugins.homepage.ipip".new()
 
 local HEADERS = {
     PROXY_LATENCY = "X-Orange-Proxy-Latency",
@@ -87,7 +88,17 @@ function Orange.init(options)
     return config, store
 end
 
+local function load_ipip()
+    -- install ipip
+    local ok, err = ipip:init("orange/plugins/homepage/20180101.dat")
+    if not ok then
+        ngx.log(ngx.CRIT, "ipip init failed: " .. tostring(err))
+    end
+end
+
 function Orange.init_worker()
+    --init ipip
+    load_ipip()
     -- 仅在 init_worker 阶段调用，初始化随机因子，仅允许调用一次
     math.randomseed()
     -- 初始化定时器，清理计数器等

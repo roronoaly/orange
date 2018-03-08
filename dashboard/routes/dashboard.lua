@@ -157,6 +157,10 @@ return function(config, store)
         res:render("divide")
     end)
 
+    dashboard_router:get("/homepage", function(req, res, next)
+        res:render("homepage")
+    end)
+
     dashboard_router:get("/balancer", function(req, res, next)
         res:render("balancer")
     end)
