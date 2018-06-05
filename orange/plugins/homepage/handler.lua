@@ -3,18 +3,17 @@ local orange_db = require("orange.store.orange_db")
 local json = require("cjson.safe")
 local http = require("resty.http")
 local string_format = string.format
-local re_match = ngx.re.match
 
-local IpIpHandler = BasePlugin:extend()
+local HomepageHandler = BasePlugin:extend()
 
-IpIpHandler.PRIORITY = 3000
+HomepageHandler.PRIORITY = 1000
 
-function IpIpHandler:new()
-    IpIpHandler.super.new(self, "homepage-plugin")
+function HomepageHandler:new()
+    HomepageHandler.super.new(self, "homepage-plugin")
 end
 
-function IpIpHandler:rewrite(conf)
-    IpIpHandler.super.access(self)
+function HomepageHandler:rewrite(conf)
+    HomepageHandler.super.rewrite(self)
     local enable = orange_db.get("homepage.enable")
     if enable then
         --uri
@@ -49,18 +48,14 @@ function IpIpHandler:rewrite(conf)
                     json_arg.ua = statinfo_json.ua
                 end
 
-                local is_baned = 0
+                local city = ""
                 local is_active = 1
                 --app端请求才需要ip到地区的映射
                 if json_arg.feeds_type == 2 or json_arg.feeds_type == 3 then
                     --请求ip地址
                     local ip = request_headers["Http-Client-Ip"]
                     if ip then
-                        local ret = ipip:find_str(ip)
-                        --如果正常解析ip
-                        if ret then
-                            is_baned = re_match(ret, "(北京|海南|上海)") and 1 or 0
-                        end
+                        city = ipip:find_str(ip)
                     end
                     --如果是推荐tab且不为柚宝宝app，则需要是否活跃用户判断
                     if json_arg.category_id == 1 then
@@ -87,16 +82,32 @@ function IpIpHandler:rewrite(conf)
                     end
                 end
                 --设置参数信息
-                json_arg.is_baned = is_baned
+                json_arg.city = city
                 json_arg.is_active = is_active
                 json_arg.is_test = arg.is_test
-                ngx.log(ngx.ERR, "json_arg:" .. json.encode(json_arg))
                 --设置nginx请求参数
                 ngx.req.set_uri_args(json_arg)
-                ngx.log(ngx.ERR, "params:" .. json.encode(ngx.req.get_uri_args()))
             end
         end
     end
 end
 
-return IpIpHandler
+function HomepageHandler:access(conf)
+    --ngx.log(ngx.ERR, "homepage access")
+    HomepageHandler.super.access(self)
+    local enable = orange_db.get("homepage.enable")
+    if enable then
+        --uri
+        local uri_path = ngx.var.uri
+        --限定首页请求
+        if uri_path == "/homepage/api/query/topicIdList" then
+            local params = {}
+            local json_arg = ngx.req.get_uri_args()
+            params.json = json.encode(json_arg)
+            params.is_test = json_arg.is_test
+            ngx.req.set_uri_args(params)
+        end
+    end
+end
+
+return HomepageHandler
