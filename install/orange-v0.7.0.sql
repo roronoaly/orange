@@ -435,7 +435,7 @@ LOCK TABLES `homepage` WRITE;
 INSERT INTO `homepage` (`id`, `key`, `value`, `type`, `op_time`)
 VALUES
     (1,'1','{}','meta','2016-11-11 11:11:11');
-
+/*!40000 ALTER TABLE `homepage` ENABLE KEYS */;
 # Dump of table consul_balancer
 # ------------------------------------------------------------
 
@@ -451,8 +451,6 @@ CREATE TABLE `consul_balancer` (
   UNIQUE KEY `unique_key` (`key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-/*!40000 ALTER TABLE `homepage` ENABLE KEYS */;
-
 LOCK TABLES `consul_balancer` WRITE;
 /*!40000 ALTER TABLE `balancer` DISABLE KEYS */;
 
@@ -461,7 +459,6 @@ VALUES
     (1,'1','{}','meta','2017-11-11 11:11:11');
 
 /*!40000 ALTER TABLE `balancer` ENABLE KEYS */;
-
 UNLOCK TABLES;
 
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
