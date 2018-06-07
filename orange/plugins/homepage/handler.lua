@@ -55,7 +55,8 @@ function HomepageHandler:rewrite(conf)
                     --请求ip地址
                     local ip = request_headers["Http-Client-Ip"]
                     if ip then
-                        city = ipip:find_str(ip)
+                        local location = ipip:location(ipip:find(ip))
+                        city = location.city
                     end
                     --如果是推荐tab且不为柚宝宝app，则需要是否活跃用户判断
                     if json_arg.category_id == 1 then
