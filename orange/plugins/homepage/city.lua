@@ -1,4 +1,5 @@
 local City = { data = "" }
+local bit32 = require('bit')
 
 City.__index = City
 
