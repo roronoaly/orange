@@ -52,10 +52,13 @@ function HomepageHandler:rewrite(conf)
                 local is_active = 1
                 --app端请求才需要ip到地区的映射
                 if json_arg.feeds_type == 2 or json_arg.feeds_type == 3 then
-                    --请求ip地址
+                    --赋值ip信息
                     local ip = request_headers["Http-Client-Ip"]
                     if ip then
-                        local location = ipip:location(ipip:find(ip))
+                        json_arg.ip = ip
+                    end
+                    if json_arg.ip then
+                        local location = ipip:location(ipip:find(json_arg.ip))
                         city = location.city
                     end
                     --如果是推荐tab且不为柚宝宝app，则需要是否活跃用户判断
@@ -63,7 +66,7 @@ function HomepageHandler:rewrite(conf)
                         local is_youbaobao = (json_arg.app_id == 2 or json_arg.app_id == 8 or json_arg.app_id == 14)
                         if not is_youbaobao then
                             --判断是否是活跃用户
-                            local url = string_format("http://%s/browse/isActive?userId=%s", "60.205.219.54", json_arg.user_id)
+                            local url = string_format("http://%s/browse/isActive?userId=%s", "127.0.0.1:8080", json_arg.user_id)
                             local httpc = http.new()
                             -- 设置超时时间 1000 ms
                             httpc:set_timeout(1000)
@@ -84,8 +87,14 @@ function HomepageHandler:rewrite(conf)
                 end
                 --设置参数信息
                 json_arg.city = city
-                json_arg.is_active = is_active
                 json_arg.is_test = arg.is_test
+                --维密后台特殊处理
+                if arg.is_vm and arg.is_vm == "1" then
+                    json_arg.user_id = math.floor(json_arg.user_id / 100)
+                    is_active = (arg.is_active == "1")
+                end
+                json_arg.is_active = is_active
+                --ngx.log(ngx.ERR, "params:" .. json.encode(json_arg))
                 --设置nginx请求参数
                 ngx.req.set_uri_args(json_arg)
             end
