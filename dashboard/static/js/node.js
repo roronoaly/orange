@@ -365,7 +365,7 @@
                 if (!id) {
                     return;
                 }
-                window.location.href = "/admin/node/persist?id=" + id + '&ip=' + ip;
+                window.location.href = "/persist?id=" + id + '&ip=' + ip;
             });
 
         },
