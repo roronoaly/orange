@@ -33,6 +33,11 @@ function HomepageHandler:rewrite(conf)
                     return
                 end
 
+                --兼容处理为空的情况
+                if not json_arg.category_id then
+                    json_arg.category_id = 1
+                end
+
                 --对statinfo进行解析,base64解析后使用json序列化
                 local header_statinfo = request_headers["statinfo"]
                 if header_statinfo then
@@ -68,8 +73,8 @@ function HomepageHandler:rewrite(conf)
                             --判断是否是活跃用户
                             local url = string_format("http://%s/browse/isActive?userId=%s", "127.0.0.1:8080", json_arg.user_id)
                             local httpc = http.new()
-                            -- 设置超时时间 1000 ms
-                            httpc:set_timeout(1000)
+                            -- 设置超时时间 2000 ms
+                            httpc:set_timeout(2000)
                             local res, err = httpc:request_uri(url, {
                                 method = "GET",
                                 headers = {
@@ -80,8 +85,9 @@ function HomepageHandler:rewrite(conf)
                             if not res or err then
                                 ngx.log(ngx.ERR, "failed to request: ", err)
                                 is_active = 1
+                            else
+                                is_active = (res.body == "true") and 1 or 0
                             end
-                            is_active = (res.body == "true") and 1 or 0
                         end
                     end
                 end
@@ -90,8 +96,8 @@ function HomepageHandler:rewrite(conf)
                 json_arg.is_test = arg.is_test
                 --维密后台特殊处理
                 if arg.is_vm and arg.is_vm == "1" then
-                    json_arg.user_id = math.floor(json_arg.user_id / 100)
-                    is_active = (arg.is_active == "1")
+                    is_active = (arg.is_active == "1") and 1 or 0
+                    json_arg.is_vm = arg.is_vm
                 end
                 json_arg.is_active = is_active
                 --ngx.log(ngx.ERR, "params:" .. json.encode(json_arg))
@@ -113,6 +119,9 @@ function HomepageHandler:access(conf)
         if uri_path == "/homepage/api/query/topicIdList" then
             local params = {}
             local json_arg = ngx.req.get_uri_args()
+            if json_arg.is_vm and json_arg.is_vm == "1" then
+                json_arg.user_id = math.floor(json_arg.user_id / 100)
+            end
             params.json = json.encode(json_arg)
             params.is_test = json_arg.is_test
             ngx.req.set_uri_args(params)
