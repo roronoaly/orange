@@ -2,8 +2,7 @@
     var _this = null;
     L.UserManage = L.UserManage || {};
     _this = L.UserManage = {
-        data: {
-        },
+        data: {},
 
         init: function () {
             _this.loadUsers();
@@ -12,7 +11,7 @@
         },
 
         initEvents: function () {
-            $("#add-user-btn").click(function(){
+            $("#add-user-btn").click(function () {
                 var content = $("#add-user-tpl").html()
                 var d = dialog({
                     title: '添加Dashboard用户',
@@ -25,24 +24,25 @@
                         value: '确定',
                         autofocus: false,
                         callback: function () {
-                            var username =$("input[name=username]").val();
+                            var username = $("input[name=username]").val();
                             var password = $("input[name=password]").val();
+                            var admin = $("#is-admin-input").val();
 
                             var pattern = /^[A-Za-z][A-Za-z0-9_]+$/;
-                            if(!username || username.length<4 || username.length>50 || !username.match(pattern)) {
+                            if (!username || username.length < 4 || username.length > 50 || !username.match(pattern)) {
                                 L.Common.showErrorTip("提示", "用户名为4~50位, 只能输入字母、下划线、数字，必须以字母开头.");
                                 return false;
                             }
 
-                            if(!password || password.length<6 || password.length>50){
+                            if (!password || password.length < 6 || password.length > 50) {
                                 L.Common.showErrorTip("提示", "密码长度须为6~50位!");
                                 return false;
                             }
 
                             var enable = $('input[name=enable]').is(':checked');
-                            if(enable){
+                            if (enable) {
                                 enable = 1;
-                            }else{
+                            } else {
                                 enable = 0;
                             }
 
@@ -53,7 +53,8 @@
                                 data: {
                                     username: username,
                                     password: password,
-                                    enable: enable
+                                    enable: enable,
+                                    admin: admin
                                 },
                                 dataType: 'json',
                                 success: function (result) {
@@ -80,10 +81,10 @@
                 d.show();
             });
 
-            $(document).on("click", ".delete-user-btn", function(){
+            $(document).on("click", ".delete-user-btn", function () {
                 var user_id = $(this).attr("data-id");
                 var name = $(this).attr("data-name");
-                if(name=="admin"){
+                if (name == "admin") {
                     L.Common.showErrorTip("提示", "不得删除admin用户!");
                     return false;
                 }
@@ -102,7 +103,7 @@
                             $.ajax({
                                 url: '/admin/user/delete',
                                 type: 'post',
-                                cache:false,
+                                cache: false,
                                 data: {
                                     user_id: user_id
                                 },
@@ -135,12 +136,14 @@
                 var tpl = $("#edit-user-tpl").html();
                 var user_id = $(this).attr("data-id");
                 var username = $(this).attr("data-name");
+                var admin = $(this).attr("data-admin");
                 var enable = $(this).attr("data-enable");
 
                 var html = juicer(tpl, {
                     u: {
-                        username:username,
-                        enable:enable
+                        username: username,
+                        enable: enable,
+                        is_admin: admin
                     }
                 });
 
@@ -157,29 +160,37 @@
                         callback: function () {
                             var new_pwd = $("input[name=password]").val();
 
-                            if(!new_pwd || new_pwd==""){
-                               new_pwd = "";
-                            }else{
-                                if(new_pwd.length<6 || new_pwd.length>50){
+                            if (!new_pwd || new_pwd == "") {
+                                new_pwd = "";
+                            } else {
+                                if (new_pwd.length < 6 || new_pwd.length > 50) {
                                     L.Common.showErrorTip("提示", "新密码长度须为6~50位!");
                                     return false;
                                 }
                             }
 
                             var enable = $('input[name=enable]').is(':checked');
-                            if(enable){
+                            if (enable) {
                                 enable = 1;
-                            }else{
+                            } else {
                                 enable = 0;
+                            }
+
+                            var new_admin = $("#is-admin-sel").val();
+                            if (new_admin == "1") {
+                                admin = 1;
+                            } else {
+                                admin = 0;
                             }
 
                             $.ajax({
                                 url: '/admin/user/modify',
                                 type: 'post',
-                                cache:false,
+                                cache: false,
                                 data: {
                                     user_id: user_id,
                                     new_pwd: new_pwd,
+                                    admin: admin,
                                     enable: enable
                                 },
                                 dataType: 'json',
