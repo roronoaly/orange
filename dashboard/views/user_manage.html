@@ -35,6 +35,7 @@
                                     <th class="center" width="60px">序号</th>
                                     <th class="center" width="40px">启用</th>
                                     <th class="center" width="150px">用户名</th>
+                                    <th class="center" width="40px">是否是管理员</th>
                                     <th class="center" width="120px">创建/变更时间</th>
                                     <th class="center" width="150px">操作</th>
                                 </tr>
@@ -49,7 +50,7 @@
         </div><!--右侧部分结束-->
     </div>
 
-    
+
 
     <script id="user-item-tpl" type="text/template">
         {@each users as u, index}
@@ -64,10 +65,18 @@
                 {@/if}
             </td>
             <td class="center">${u.username}</td>
+            <td class="center">
+                {@if u.is_admin==1 }
+                <span class="label label-primary">是</span>
+                {@/if}
+                {@if u.is_admin!=1 }
+                <span class="label label-warning">否</span>
+                {@/if}
+            </td>
             <td class="center">${u.create_time}</td>
             <td class="center do">
                 <div class="btn-group" role="group" aria-label="...">
-                    <button type="button" class="btn btn-default edit-user-btn" data-id="${u.id}" data-name="${u.username}" data-enable="${u.enable}"><i title="修改密码" class="fa fa-pencil"></i></button>
+                    <button type="button" class="btn btn-default edit-user-btn" data-id="${u.id}" data-name="${u.username}" data-enable="${u.enable}" data-admin="${u.is_admin}"><i title="修改密码" class="fa fa-pencil"></i></button>
 
                     {@if u.is_admin!=1 }
                     <button type="button" class="btn btn-default delete-user-btn" data-id="${u.id}" data-name="${u.username}"><i title="删除" class="fa fa-trash" style="color:#EA8282"></i></button>
@@ -92,6 +101,16 @@
                     <label for="input-name" class="col-sm-2 control-label">密码</label>
                     <div class="col-sm-10">
                         <input type="text" class="form-control" id="username-input" name="password" placeholder="密码长度须为6~50位">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="input-name" class="col-sm-2 control-label">管理员</label>
+                    <div class="col-sm-10">
+                        <select class="form-control" name="is-admin" id="is-admin-input">
+                            <option value="1">是</option>
+                            <option value="0">否</option>
+                        </select>
                     </div>
                 </div>
 
@@ -122,6 +141,16 @@
                     <label for="input-name" class="col-sm-2 control-label">密码</label>
                     <div class="col-sm-10">
                         <input type="text" class="form-control" name="password" placeholder="输入新密码，密码长度须为6~50位，不需修改时请勿输入任何字符">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="input-name" class="col-sm-2 control-label">管理员</label>
+                    <div class="col-sm-10">
+                        <select class="form-control" name="is-admin" id="is-admin-sel">
+                            <option value="1" {@if u.is_admin==1} selected {@/if} >是</option>
+                            <option value="0" {@if u.is_admin!=1} selected {@/if} >否</option>
+                        </select>
                     </div>
                 </div>
 

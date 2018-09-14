@@ -4,9 +4,12 @@ local table_sort = table.sort
 local pcall = pcall
 local require = require
 require("orange.lib.globalpatches")()
+local ck = require("orange.lib.cookie")
 local utils = require("orange.utils.utils")
 local config_loader = require("orange.utils.config_loader")
 local dao = require("orange.store.dao")
+local dns_client = require("resty.dns.client")
+local city = require("orange.plugins.homepage.city")
 
 local HEADERS = {
     PROXY_LATENCY = "X-Orange-Proxy-Latency",
@@ -41,6 +44,14 @@ local function load_node_plugins(config, store)
     end)
 
     return sorted_plugins
+end
+
+local function load_ipip()
+    -- install ipip
+    ipip, err = city:new("orange/plugins/homepage/20180607.DATX")
+    if not ipip then
+        ngx.log(ngx.CRIT, "ipip init failed: " .. tostring(err))
+    end
 end
 
 -- ms
@@ -78,9 +89,14 @@ function Orange.init(options)
         store = store,
         config = config
     }
+    --init ipip
+    load_ipip()
+    -- init dns_client
+    assert(dns_client.init())
 
     return config, store
 end
+
 
 function Orange.init_worker()
     -- 仅在 init_worker 阶段调用，初始化随机因子，仅允许调用一次
@@ -111,6 +127,14 @@ function Orange.init_worker()
     end
 end
 
+function Orange.init_cookies()
+    ngx.ctx.__cookies__ = nil
+
+    local COOKIE, err = ck:new()
+    if not err and COOKIE then
+        ngx.ctx.__cookies__ = COOKIE
+    end
+end
 
 function Orange.redirect()
     ngx.ctx.ORANGE_REDIRECT_START = now()
@@ -151,6 +175,11 @@ function Orange.access()
     ngx.ctx.ACCESSED = true
 end
 
+function Orange.balancer()
+    for _, plugin in ipairs(loaded_plugins) do
+        plugin.handler:balancer()
+    end
+end
 
 function Orange.header_filter()
 
